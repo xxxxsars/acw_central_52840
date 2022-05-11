@@ -512,7 +512,7 @@ static void start_scan(void)
 
 }
 
-static void connected(struct bt_conn *conn, uint8_t conn_err)
+static void  connected(struct bt_conn *conn, uint8_t conn_err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
 	int err;
@@ -655,10 +655,33 @@ static void bt_ready(int err)
 }
 
 
+
+
+
+static void bond_info(const struct bt_bond_info *info, void *user_data)
+{
+        char addr[BT_ADDR_LE_STR_LEN];
+        int *bond_count = user_data;
+
+
+
+		if(bond_count){
+			printk("had bonded ble device.\n");
+			int err = bt_unpair(BT_ID_DEFAULT, &info->addr);
+			if (err){
+				printk("uppair faied :%d \n",err);
+			}	
+		}
+
+        bt_addr_le_to_str(&info->addr, addr, sizeof(addr));
+        printk("Remote Identity: %s\n", addr);
+        (*bond_count)++;
+}
+
+
 void main(void)
 {
 	int err;
-
 
 
 	err = bt_enable(bt_ready);
@@ -678,4 +701,11 @@ void main(void)
 
 
 	start_scan();
+
+	int bond_count = 0;
+	bt_foreach_bond(BT_ID_DEFAULT, bond_info, &bond_count);
+	printk("Total bonded %d\n", bond_count);
+
+
 }
+
